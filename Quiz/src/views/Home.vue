@@ -58,11 +58,7 @@
               <div class="feature-list">
                 <div class="feature-item">
                   <BarChart3 size="24" />
-                  <span>10 questões desafiadoras</span>
-                </div>
-                <div class="feature-item">
-                  <Clock size="24" />
-                  <span>3 níveis disponíveis</span>
+                  <span>6 questões desafiadoras</span>
                 </div>
                 <div class="feature-item">
                   <Medal size="24" />
@@ -107,54 +103,15 @@
                 <span class="input-hint">Máximo 25 caracteres</span>
               </div>
 
-              <!-- Dificuldade -->
-              <div class="form-group">
-                <label class="form-label">
-                  <Layers size="18" />
-                  Nível de Dificuldade
-                </label>
-                <div class="difficulty-cards">
-                  <button 
-                    v-for="level in difficulties" 
-                    :key="level.id"
-                    :class="['diff-card', `diff-${level.id}`, { active: selectedDifficulty === level.id }]"
-                    @click="selectedDifficulty = level.id"
-                  >
-                    <div class="diff-card-header">
-                      <component :is="level.icon" size="32" />
-                      <div v-if="selectedDifficulty === level.id" class="diff-check">
-                        <Check size="16" />
-                      </div>
-                    </div>
-                    <div class="diff-card-body">
-                      <h4 class="diff-name">{{ level.name }}</h4>
-                      <p class="diff-desc">{{ level.description }}</p>
-                    </div>
-                    <div class="diff-card-footer">
-                      <span class="time-tag">
-                        <Timer size="14" />
-                        {{ level.time > 0 ? level.time + 's' : 'Livre' }}
-                      </span>
-                    </div>
-                  </button>
-                </div>
-              </div>
-
               <!-- Preview da seleção -->
-              <div class="selection-preview" v-if="playerName">
-                <div class="preview-item">
-                  <span class="preview-label">Jogador:</span>
-                  <span class="preview-value player">{{ playerName }}</span>
-                </div>
+             <div class="selection-preview" v-if="playerName">
+  <div class="preview-item">
+    <span class="preview-label">Jogador:</span>
+    <span class="preview-value player">{{ playerName }}</span>
+  </div>
+</div>
+
                 <div class="preview-divider"></div>
-                <div class="preview-item">
-                  <span class="preview-label">Modo:</span>
-                  <span class="preview-value mode" :class="selectedDifficulty">
-                    <component :is="currentDifficulty.icon" size="16" />
-                    {{ currentDifficulty.name }}
-                  </span>
-                </div>
-              </div>
 
               <button 
                 class="btn-start-game" 
@@ -173,12 +130,10 @@
 
     <!-- TELA 3: QUIZ -->
     <transition name="slide-left" mode="out-in">
-     <Quiz
+  <Quiz
   v-if="currentScreen === 'quiz'"
   key="quiz"
   :player-name="playerName"
-  :difficulty="selectedDifficulty"
-  :difficulty-config="currentDifficulty"
   @finish="handleQuizFinish"
   @exit="goToHome"
 />
@@ -203,13 +158,8 @@
             <div class="score-content">
               <span class="score-number">{{ finalScore }}</span>
               <span class="score-divider">/</span>
-              <span class="score-total">8</span>
+              <span class="score-total">6</span>
             </div>
-          </div>
-
-          <div class="difficulty-result" :class="`result-${selectedDifficulty}`">
-            <component :is="currentDifficulty.icon" size="20" />
-            <span class="result-text">Nível {{ currentDifficulty.name }}</span>
           </div>
 
           <p class="results-message">{{ resultMessage }}</p>
@@ -285,7 +235,6 @@
   <span class="answer-letter">{{ item.correctAnswer.toUpperCase() }}</span>
   <span class="answer-text">{{ item.correctText }}</span>
 </div>
-               <div class="gabarito-explanation" v-html="item.justification"></div>
 
 <div v-if="item.userAnswer != null" class="user-answer">
   <span class="user-label">Sua resposta:</span>
@@ -346,7 +295,6 @@ const ADMIN = 'isamanu15'
 
 const currentScreen = ref('home')
 const playerName = ref('')
-const selectedDifficulty = ref('easy')
 const showGabarito = ref(false)
 const showRanking = ref(false)
 const isReplay = ref(false)
@@ -358,44 +306,17 @@ const quizHistory = ref([])
 
 const mathIcons = [Plus, Minus, X, Divide, Radical, Pi]
 
-const difficulties = [
-  {
-    id: 'easy',
-    name: 'Iniciante',
-    icon: Sprout,
-    description: 'Sem limite de tempo',
-    time: 0
-  },
-  {
-    id: 'medium',
-    name: 'Intermediário',
-    icon: Zap,
-    description: 'tempo controlado',
-    time: 30
-  },
-  {
-    id: 'hard',
-    name: 'Avançado',
-    icon: Flame,
-    description: 'Rápido e desafiador',
-    time: 15
-  }
-]
-
-const currentDifficulty = computed(() => 
-  difficulties.find(d => d.id === selectedDifficulty.value)
-)
 
 const trophyIcon = computed(() => {
-  if (finalScore.value >= 8) return Trophy
-  if (finalScore.value >= 6) return Medal
-  if (finalScore.value >= 4) return Award
+  if (finalScore.value >= 6) return Trophy
+  if (finalScore.value >= 4) return Medal
+  if (finalScore.value >= 2) return Award
   return BookOpen
 })
 
 const trophyClass = computed(() => {
-  if (finalScore.value >= 8) return 'gold'
-  if (finalScore.value >= 6) return 'silver'
+  if (finalScore.value >= 6) return 'gold'
+  if (finalScore.value >= 4) return 'silver'
   return ''
 })
 
@@ -488,7 +409,6 @@ const closeRanking = () => {
 
 const resetSetup = () => {
   playerName.value = ''
-  selectedDifficulty.value = 'easy'
   finalScore.value = 0
   finalCorrect.value = 0
   finalWrong.value = 0

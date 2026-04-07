@@ -10,24 +10,11 @@
               <Trophy class="ranking-icon" size="48" />
               <div>
                 <h2 class="ranking-title">Top Jogadores</h2>
-                <p class="ranking-subtitle">Quem está dominando o jogo agora</p>
+                <p class="ranking-subtitle">Ranking geral dos jogadores</p>
               </div>
             </div>
             <button class="btn-close-ranking" @click="closeModal">
               <X size="24" />
-            </button>
-          </div>
-
-          <!-- Tabs -->
-          <div class="ranking-tabs">
-            <button 
-              v-for="tab in tabs" 
-              :key="tab.id"
-              :class="['tab-btn', { active: activeTab === tab.id }]"
-              @click="activeTab = tab.id"
-            >
-              <component :is="tab.icon" class="tab-icon" size="20" />
-              <span class="tab-text">{{ tab.name }}</span>
             </button>
           </div>
 
@@ -70,10 +57,6 @@
                     <span v-if="player.name === props.currentPlayer" class="current-badge">Você</span>
                   </div>
                   <div class="rank-meta">
-                    <span class="rank-difficulty" :class="player.difficulty">
-                      <component :is="getDifficultyIcon(player.difficulty)" size="14" />
-                      {{ getDifficultyName(player.difficulty) }}
-                    </span>
                     <span class="rank-date">{{ formatDate(player.createdAt) }}</span>
                   </div>
                 </div>
@@ -247,28 +230,17 @@ const props = defineProps({
   }
 })
 
-const ADMIN = 'isamanu15'
+const ADMIN = 'isalima1'
 
 const emit = defineEmits(['close'])
 
-const activeTab = ref('all')
 const rankingData = ref([])
 const confirmClear = ref(false)
 const showAdminGabarito = ref(false)
 
-const tabs = [
-  { id: 'all', name: 'Geral', icon: Globe },
-  { id: 'easy', name: 'Iniciante', icon: Sprout },
-  { id: 'medium', name: 'Intermediário', icon: Zap },
-  { id: 'hard', name: 'Avançado', icon: Flame }
-]
 
 const filteredRanking = computed(() => {
-  let data = rankingData.value
-  if (activeTab.value !== 'all') {
-    data = data.filter(p => p.difficulty === activeTab.value)
-  }
-  return data.slice(0, 20) // Top 20
+  return rankingData.value.slice(0, 20)
 })
 
 const totalPlayers = computed(() => rankingData.value.length)
@@ -293,14 +265,12 @@ const loadRanking = async () => {
 }
 
 const adminGabarito = [
-  { n: 1, correct: "A", text: "20 músicas" },
-  { n: 2, correct: "B", text: "f(x) = 2x + 5" },
-  { n: 3, correct: "C", text: "38 cm" },
-  { n: 4, correct: "D", text: "13" },
-  { n: 5, correct: "D", text: "R$ 20" },
-  { n: 6, correct: "A", text: "R$ 30" },
-  { n: 7, correct: "D", text: "40" },
-  { n: 8, correct: "B", text: "R$ 20" }
+  { n: 1, correct: "A", text: "161.355 peças" },
+  { n: 2, correct: "B", text: "23" },
+  { n: 3, correct: "C", text: "26" },
+  { n: 4, correct: "B", text: "47" },
+  { n: 5, correct: "A", text: "R$874,30" },
+  { n: 6, correct: "A", text: "910" }
 ]
 
 const deletePlayer = async (id) => {
@@ -352,16 +322,6 @@ const deletePlayer = async (id) => {
       console.error('Erro ao deletar:', err)
     }
   }
-}
-
-const getDifficultyIcon = (diff) => {
-  const icons = { easy: Sprout, medium: Zap, hard: Flame }
-  return icons[diff] || Globe
-}
-
-const getDifficultyName = (diff) => {
-  const names = { easy: 'Iniciante', medium: 'Intermediário', hard: 'Avançado' }
-  return names[diff] || diff
 }
 
 const formatDate = (dateString) => {

@@ -6,23 +6,7 @@
         <span class="player-avatar">👤</span>
         <span class="player-name">{{ playerName }}</span>
       </div>
-      <div class="difficulty-badge" :class="`badge-${difficulty}`">
-           <component :is="difficultyConfig.icon" size="16" />
-        {{ difficultyConfig.name }}
-      </div>
       <button class="btn-exit" @click="confirmExit">✕</button>
-    </div>
-
-    <!-- Timer -->
-    <div v-if="difficulty !== 'easy'" class="timer-bar-container">
-      <div 
-        class="timer-bar" 
-        :class="{ 'warning': timeLeft <= 10, 'danger': timeLeft <= 5 }"
-        :style="{ width: (timeLeft / difficultyConfig.time * 100) + '%' }"
-      ></div>
-      <span class="timer-text" :class="{ 'pulse': timeLeft <= 10 }">
-        ⏱ {{ timeLeft }}s
-      </span>
     </div>
 
     <!-- Quiz Card -->
@@ -55,11 +39,11 @@
               'selected': selectedOption === key,
               'correct': showFeedback && key === currentQuestion.correct,
               'wrong': showFeedback && selectedOption === key && key !== currentQuestion.correct,
-              'disabled': showFeedback || (difficulty !== 'easy' && timeLeft <= 0)
+              'disabled': showFeedback
             }
           ]"
           @click="selectOption(key)"
-          :disabled="showFeedback || (difficulty !== 'easy' && timeLeft <= 0)"
+          :disabled="showFeedback"
         >
           <span class="option-letter">{{ key.toUpperCase() }}</span>
           <span class="option-text">{{ option }}</span>
@@ -83,22 +67,13 @@
               </div>
             </div>
             
-            <div class="justification-box">
-              <span class="justification-label">💡 Explicação:</span>
-            <p class="justification-text" v-html="currentQuestion.justification"></p>
-            </div>
           </div>
         </div>
       </transition>
-
-      <div v-if="timeExpired && !showFeedback" class="time-expired-msg">
-        ⏰ Tempo Esgotado!
-      </div>
-
       <button 
         class="btn-primary"
         @click="nextQuestion"
-        :disabled="!showFeedback && !timeExpired"
+        :disabled="!showFeedback"
       >
         {{ isLastQuestion ? 'Finalizar' : 'Próxima Questão →' }}
       </button>
@@ -151,63 +126,40 @@ const showExitConfirm = ref(false)
 const userAnswers = ref([])
 const quizHistory = ref([])
 
-// Timer
-const timeLeft = ref(0)
-const timeExpired = ref(false)
-let timerInterval = null
-
 const questions = ref([])
 
 // Questões com justificativas
 const originalQuestions = [ 
   {
-    question: "Uma playlist começa com <span class='math-expr'>5 músicas</span> e a cada dia recebe mais 3 músicas que no dia anterior. Quantas músicas são adicionadas no <span class='math-expr'>6º dia</span>?",
-    options: { a: "20", b: "17", c: "23", d: "15" },
-    correct: "a",
-    justification: "<b>Resposta: 20 músicas</b><br><small>Progressão Aritmética (PA): a<sub>n</sub> = a<sub>1</sub> + (n - 1)·r</small><br>a<sub>1</sub> = 5 (primeiro termo), r = 3 (razão), n = 6 (dia desejado)<br>a<sub>6</sub> = 5 + (6 - 1)·3 = 5 + 15 = <b>20</b><br><small>Alternativa correta: A</small>"
+    question: "Em uma fábrica de roupas, após a aquisição de novas máquinas tecnológicas e a contratação de mais funcionárias, a produção diária de calças de alfaiateria passou a crescer de forma constante. No primeiro dia de operação com as novas máquinas, foram produzidas <span class='math-expr'>550 peças</span>. A cada dia, devido às melhorias tecnológicas aplicadas, a produção aumenta em <span class='math-expr'>333</span> peças. Qual será a produção total ao longo de <span class='math-expr'>30 dias</span>?",
+    options: { a: "161.355 peças", b: "10.757 peças", c: "171.990 peças", d: "16.135 peças" },
+    correct: "a"
   },
   {
-    question: "Um serviço cobra uma taxa fixa de <span class='math-expr'>R$5</span> mais <span class='math-expr'>R$2 por unidade</span>. Qual é a função que representa esse valor?",
-    options: { a: "f(x)=5x+2", b: "f(x)=2x+5", c: "f(x)=2x-5", d: "f(x)=7x" },
+    question: "Durante uma gincana de matemática, os participantes encontraram uma escada numerada. Eles perceberam que os números dos degraus seguiam uma progressão aritmética (PA). Os cinco primeiros degraus eram: <span class='math-expr'>2, 5, 8, 11, 14, ...</span>Seguindo esse padrão, qual número estará no <span class='math-expr'>8º degrau</span>?",
+    options: { a: "20", b: "23", c: "26", d: "29" },
     correct: "b",
-    justification: "<b>Resposta: f(x) = 2x + 5</b><br><small>Função Afim: f(x) = ax + b</small><br>a = coeficiente angular (valor por unidade) = 2<br>b = coeficiente linear (taxa fixa) = 5<br>Portanto: <b>f(x) = 2x + 5</b><br><small>Alternativa correta: B</small>"
   },
   {
-    question: "Uma escada tem o primeiro degrau com <span class='math-expr'>10 cm</span> e cada degrau aumenta <span class='math-expr'>2 cm</span>. Qual a altura do <span class='math-expr'>15º degrau</span>?",
-    options: { a: "36", b: "40", c: "38", d: "42" },
-    correct: "c",
-    justification: "<b>Resposta: 38 cm</b><br><small>Progressão Aritmética (PA): a<sub>n</sub> = a<sub>1</sub> + (n - 1)·r</small><br>a<sub>1</sub> = 10 cm, r = 2 cm, n = 15<br>a<sub>15</sub> = 10 + (15 - 1)·2 = 10 + 28 = <b>38 cm</b><br><small>Alternativa correta: C</small>"
+    question: "Em uma biblioteca escolar, no primeiro dia foram organizados <span class='math-expr'>5 livros</span> em uma estante. A cada dia seguinte, os alunos organizaram <span class='math-expr'>3 livros</span> a mais que no dia anterior. Quantos livros foram organizados no <span class='math-expr'>8º dia</span>?",
+    options: { a: "23", b: "24", c: "26", d: "29" },
+    correct: "c"
   },
   {
-    question: "Se <span class='math-expr'>f(x)=3x+1</span>, qual é o valor de <span class='math-expr'>f(4)</span>?",
-    options: { a: "12", b: "10", c: "15", d: "13" },
-    correct: "d",
-    justification: "<b>Resposta: 13</b><br><small>Para calcular f(4), substituímos x por 4 na função:</small><br>f(4) = 3·(4) + 1 = 12 + 1 = <b>13</b><br><small>Alternativa correta: D</small>"
+    question: "Uma sequência numérica é uma progressão aritmética em que o primeiro termo é <span class='math-expr'>5</span> e a razão é <span class='math-expr'>3</span>. Sabendo disso, qual é o <span class='math-expr'>15º termo</span> dessa progressão?",
+    options: { a: "42", b: "47", c: "50", d: "48" },
+    correct: "b"
   },
   {
-    question: "Uma pessoa guarda <span class='math-expr'>R$2</span> no primeiro dia e aumenta <span class='math-expr'>R$2 por dia</span>. Quanto ela guarda no <span class='math-expr'>10º dia</span>?",
-    options: { a: "22", b: "18", c: "24", d: "20" },
-    correct: "d",
-    justification: "<b>Resposta: R$ 20</b><br><small>Progressão Aritmética (PA): a<sub>n</sub> = a<sub>1</sub> + (n - 1)·r</small><br>a<sub>1</sub> = 2, r = 2, n = 10<br>a<sub>10</sub> = 2 + (10 - 1)·2 = 2 + 18 = <b>20</b><br><small>Alternativa correta: D</small>"
+    question: "Durante uma promoção em uma loja de tênis, os preços de um modelo seguem uma progressão aritmética (P.A). No primeiro dia, o tênis custa <span class='math-expr'>R$79,90</span>, e a cada dia o preço aumenta <span class='math-expr'>R$15 em relação ao dia anterior</span>. Se uma pessoa acompanhar o preço durante <span class='math-expr'>7 dias</span> e somar todos os valores praticados nesse período, qual será o total?",
+    options: { a: "R$874,30", b: "R$909,30", c: "R$944,30", d: "R$979,30" },
+    correct: "a"
   },
   {
-    question: "Uma corrida custa <span class='math-expr'>R$10 fixo</span> mais <span class='math-expr'>R$4 por km</span>. Quanto custa uma corrida de <span class='math-expr'>5 km</span>?",
-    options: { a: "30", b: "25", c: "35", d: "20" },
-    correct: "a",
-    justification: "<b>Resposta: R$ 30</b><br><small>Função do custo: C(x) = 4x + 10, onde x = km</small><br>C(5) = 4·5 + 10 = 20 + 10 = <b>30</b><br>Ou seja: R$ 20 (variável) + R$ 10 (fixo) = R$ 30<br><small>Alternativa correta: A</small>"
+    question: "Em uma progressão aritmética, o <span class='math-expr'>5º termo</span>é igual a <span class='math-expr'>53.</span>. Sabendo disso, qual é a soma dos<span class='math-expr'>20</span> primeiros termos dessa P.A?",
+    options: { a: "910", b: "980", c: "1.020", d: "1.100" },
+    correct: "a"
   },
-  {
-    question: "Uma sequência segue o padrão: <span class='math-expr'>12, 16, 20, 24...</span>. Qual é o <span class='math-expr'>8º termo</span>?",
-    options: { a: "44", b: "36", c: "48", d: "40" },
-    correct: "d",
-    justification: "<b>Resposta: 40</b><br><small>Progressão Aritmética (PA): a<sub>n</sub> = a<sub>1</sub> + (n - 1)·r</small><br>a<sub>1</sub> = 12, r = 4 (16-12=4), n = 8<br>a<sub>8</sub> = 12 + (8 - 1)·4 = 12 + 28 = <b>40</b><br><small>Alternativa correta: D</small>"
-  },
- {
-  question: "Uma empresa cobra uma taxa fixa de <span class='math-expr'>R$8</span> mais <span class='math-expr'>R$3 por produto</span>. Qual será o valor pago ao comprar <span class='math-expr'>4 produtos</span>?",
-  options: { a: "18", b: "20", c: "22", d: "24" },
-  correct: "b",
-  justification: "<b>Resposta: R$ 20</b><br><small>Função afim: f(x) = ax + b</small><br>a = 3 (valor por produto), b = 8 (taxa fixa)<br>f(4) = 3·4 + 8 = 12 + 8 = <b>20</b><br><small>Alternativa correta: B</small>"
-}
 ]
 // Computed
 const currentQuestion = computed(() => questions.value[currentQuestionIndex.value])
@@ -219,38 +171,15 @@ const progressPercentage = computed(() =>
   ((currentQuestionIndex.value + 1) / questions.value.length) * 100
 )
 
-// Lifecycle
 onMounted(() => {
-    generateQuestions()
-  startTimer()
+  generateQuestions()
 })
-
-onUnmounted(() => {
-  stopTimer()
-})
-
-// Timer
-const startTimer = () => {
-  if (props.difficulty === 'easy') return
-  
-  timeLeft.value = props.difficultyConfig.time
-  timeExpired.value = false
-  
-  timerInterval = setInterval(() => {
-    timeLeft.value--
-    if (timeLeft.value <= 0) {
-      clearInterval(timerInterval)
-      timeExpired.value = true
-      handleTimeExpired()
-    }
-  }, 1000)
-}
 
 const generateQuestions = () => {
   let finalQuestions = [...originalQuestions]
 
   // embaralha somente se marcado e não for fácil
-  if (props.shuffle && props.difficulty !== 'easy') {
+ if (props.shuffle) {
     finalQuestions = shuffleArray(finalQuestions)
   }
 
@@ -265,38 +194,12 @@ const shuffleArray = (array) => {
   }
   return arr
 }
-
-
-const stopTimer = () => {
-  if (timerInterval) {
-    clearInterval(timerInterval)
-    timerInterval = null
-  }
-}
-
-const handleTimeExpired = () => {
-  wrongAnswers.value++
-  showFeedback.value = true
-  isCorrect.value = false
-  
-  const userAnswerSnapshot = option // 👈 salva direto do clique
-
-quizHistory.value.push({
-  question: questionSnapshot.question,
-  correctAnswer: questionSnapshot.correct,
-  correctText: questionSnapshot.options[questionSnapshot.correct],
-  userAnswer: userAnswerSnapshot, // 👈 usa snapshot
-  justification: questionSnapshot.justification
-})
-}
-
 // Quiz Logic
 const selectOption = (option) => {
-  if (showFeedback.value || timeExpired.value) return
+if (showFeedback.value) return
   
   selectedOption.value = option
   userAnswers.value[currentQuestionIndex.value] = option
-  stopTimer()
   checkAnswer(option)
 }
 
@@ -316,15 +219,13 @@ const checkAnswer = (option) => {
 
   console.log("Resposta do usuário:", userAnswerSnapshot)
 
-  quizHistory.value.push({
-    question: questionSnapshot.question,
-    correctAnswer: questionSnapshot.correct,
-    correctText: questionSnapshot.options[questionSnapshot.correct],
-    userAnswer: userAnswerSnapshot,
-    justification: questionSnapshot.justification
-  })
+quizHistory.value.push({
+  question: questionSnapshot.question,
+  correctAnswer: questionSnapshot.correct,
+  correctText: questionSnapshot.options[questionSnapshot.correct],
+  userAnswer: userAnswerSnapshot
+})
 }
-
 
 const nextQuestion = () => {
   if (isLastQuestion.value) {
@@ -332,7 +233,6 @@ const nextQuestion = () => {
   } else {
     currentQuestionIndex.value++
     resetQuestion()
-    startTimer()
   }
 }
 
@@ -340,18 +240,16 @@ const resetQuestion = () => {
   selectedOption.value = null
   showFeedback.value = false
   isCorrect.value = false
-  timeExpired.value = false
 }
 
 const finishQuiz = async () => {
-  stopTimer()
 
  const result = {
   name: props.playerName,
   score: score.value,
   correct: correctAnswers.value,
   wrong: wrongAnswers.value,
-  difficulty: props.difficulty,
+  difficulty: 'easy',
   history: quizHistory.value // 👈 ESSENCIAL
 }
 
@@ -407,7 +305,6 @@ const finishQuiz = async () => {
 
 
 const confirmExit = () => {
-  stopTimer()
   showExitConfirm.value = true
 }
 
@@ -458,7 +355,7 @@ const exitQuiz = () => {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+ background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
   font-family: 'Segoe UI', system-ui, sans-serif;
 }
 
@@ -592,13 +489,13 @@ const exitQuiz = () => {
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+ background: linear-gradient(90deg, #7c3aed 0%, #a78bfa 100%);
   border-radius: 10px;
   transition: width 0.5s ease;
 }
 
 .progress-text {
-  color: #667eea;
+  color: #7c3aed;
   font-weight: 700;
   font-size: 0.9rem;
   min-width: 50px;
@@ -607,7 +504,7 @@ const exitQuiz = () => {
 
 /* Question Box */
 .question-box {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);
   padding: 35px;
   border-radius: 16px;
   margin-bottom: 25px;
@@ -695,14 +592,15 @@ const exitQuiz = () => {
 }
 
 .option-btn:hover:not(.disabled) {
-  border-color: #667eea;
   transform: translateY(-3px);
-  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.2);
+ border-color: #7c3aed;
+box-shadow: 0 10px 25px rgba(124, 58, 237, 0.25);
+
 }
 
 .option-btn.selected {
-  border-color: #667eea;
-  background: #f0f4ff;
+background: #ede9fe;
+border-color: #7c3aed;
 }
 
 .option-btn.selected::before {
@@ -760,13 +658,16 @@ const exitQuiz = () => {
   color: #4a5568;
 }
 
-.option-a .option-letter { background: #fee2e2; color: #dc2626; }
-.option-b .option-letter { background: #d1fae5; color: #059669; }
-.option-c .option-letter { background: #fef3c7; color: #d97706; }
-.option-d .option-letter { background: #e0e7ff; color: #4f46e5; }
+.option-a .option-letter,
+.option-b .option-letter,
+.option-c .option-letter,
+.option-d .option-letter {
+  background: #ede9fe;
+  color: #5b21b6;
+}
 
 .option-btn.selected .option-letter {
-  background: #667eea !important;
+  background: #7c3aed !important;
   color: white !important;
   transform: scale(1.1);
 }
@@ -878,7 +779,7 @@ const exitQuiz = () => {
   background: white;
   padding: 16px;
   border-radius: 12px;
-  border-left: 4px solid #667eea;
+ border-left: 4px solid #7c3aed;
 }
 
 .justification-label {
@@ -912,7 +813,7 @@ const exitQuiz = () => {
 .btn-primary {
   width: 100%;
   padding: 18px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+ background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%);
   color: white;
   border: none;
   border-radius: 12px;
