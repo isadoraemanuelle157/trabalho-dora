@@ -356,7 +356,7 @@ const finishQuiz = async () => {
 }
 
   try {
-  const res = await fetch('https://quiz-backend-4c5y.onrender.com/ranking', {
+  const res = await fetch('https://trabalho-dora.onrender.com/ranking', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(result)

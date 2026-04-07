@@ -284,7 +284,7 @@ const bestScore = computed(() => {
 
 const loadRanking = async () => {
   try {
-    const res = await fetch('https://quiz-backend-4c5y.onrender.com/ranking')
+    const res = await fetch('https://trabalho-dora.onrender.com/ranking')
     const data = await res.json()
     rankingData.value = data
   } catch (err) {
@@ -319,7 +319,7 @@ const deletePlayer = async (id) => {
 
   if (result.isConfirmed) {
     try {
-      const res = await fetch(`https://quiz-backend-4c5y.onrender.com/ranking/${id}`, {
+      const res = await fetch(`https://trabalho-dora.onrender.com/ranking/${id}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -386,7 +386,7 @@ const closeModal = () => {
 
 const clearRanking = async () => {
   try {
-    await fetch('https://quiz-backend-4c5y.onrender.com/ranking', {
+    await fetch('https://trabalho-dora.onrender.com/ranking', {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
