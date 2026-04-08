@@ -27,9 +27,9 @@ const getAll = async (req, res) => {
     const data = await service.getRanking()
     res.json(data)
   } catch (err) {
-    console.error('ERRO REAL:', err) // 👈 ADICIONA ISSO
-    res.status(500).json({ error: err.message })
-  }
+  console.error('🔥 ERRO REAL RANKING:', err)
+  res.status(500).json({ error: err.message })
+}
 }
 
 // CHECK NAME
