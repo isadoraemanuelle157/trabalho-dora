@@ -36,9 +36,10 @@ const checkNameExists = async (name) => {
 
 // buscar ranking (top 20)
 const getRanking = async () => {
-  return [{ name: 'teste', score: 10 }]
+  return await Ranking.find()
+    .sort({ score: -1 })
+    .limit(20)
 }
-
 
 // limpar ranking (admin)
 const clearRanking = async (user) => {
