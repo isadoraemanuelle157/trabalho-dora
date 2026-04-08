@@ -6,24 +6,24 @@ const connectDB = require('./config/db')
 
 const app = express()
 
-// conectar banco
-connectDB()
-
-// middlewares
 app.use(cors())
 app.use(express.json())
 
-// rota principal teste
+// rota teste
 app.get('/', (req, res) => {
   res.send('API do Quiz rodando 🚀')
 })
 
-// rotas
-app.use('/ranking', require('./routes/rankingRoutes'))
+// 🔥 IMPORTANTE: esperar o banco conectar
+const startServer = async () => {
+  await connectDB()
 
-// porta
-const PORT = process.env.PORT || 3002
+  app.use('/ranking', require('./routes/rankingRoutes'))
 
-app.listen(PORT, () => {
-  console.log(`🔥 Servidor rodando na porta ${PORT}`)
-})
+  const PORT = process.env.PORT || 3002
+  app.listen(PORT, () => {
+    console.log(`🔥 Servidor rodando na porta ${PORT}`)
+  })
+}
+
+startServer()
