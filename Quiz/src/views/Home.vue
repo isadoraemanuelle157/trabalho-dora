@@ -8,7 +8,7 @@
             <!-- SUBSTITUÍDO: Imagem da Laura no lugar do ícone Target -->
   <div class="logo-image-wrapper">
     <img 
-      src="/src/assets/isa-laura.png" 
+      src="/src/assets/isa-lauraa.jpeg" 
       alt="Laura" 
       class="logo-image"
     />
